@@ -1,6 +1,6 @@
 
 from fastapi import FastAPI
-from . import models, crud
+from . import modelos, crud
 from .routers import auth, barberos, servicios, cortes, gastos
 from sqlmodel import SQLModel, create_engine
 import os
