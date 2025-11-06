@@ -46,3 +46,30 @@ def eliminar_barbero(barbero_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": f"Barbero '{barbero.nombre}' eliminado correctamente."}
 
+# ✅ Actualizar datos de un barbero
+@router.put("/{barbero_id}")
+def actualizar_barbero(
+    barbero_id: int,
+    nombre: str = None,
+    contraseña: str = None,
+    porcentaje: float = None,
+    db: Session = Depends(get_db)
+):
+    barbero = db.query(Barbero).filter(Barbero.id == barbero_id).first()
+    if not barbero:
+        raise HTTPException(status_code=404, detail="Barbero no encontrado.")
+
+    if nombre:
+        barbero.nombre = nombre
+    if contraseña:
+        barbero.contraseña = contraseña
+    if porcentaje is not None:
+        barbero.porcentaje = porcentaje
+
+    db.commit()
+    db.refresh(barbero)
+    return {
+        "mensaje": f"✅ Barbero '{barbero.nombre}' actualizado correctamente.",
+        "id": barbero.id,
+        "porcentaje": barbero.porcentaje,
+    }
