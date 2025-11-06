@@ -1,30 +1,79 @@
 
-from .modelos import Usuario, Barbero, Servicio, Corte, Gasto
-from sqlmodel import Session, select
-from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from app import modelos
+from datetime import datetime
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ---------------------------------
+# USUARIOS
+# ---------------------------------
+def obtener_usuario_por_nombre(db: Session, nombre_usuario: str):
+    return db.query(modelos.Usuario).filter(modelos.Usuario.nombre_usuario == nombre_usuario).first()
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
 
-def create_default_data(engine):
-    with Session(engine) as session:
-        # check if admin exists
-        res = session.exec(select(Usuario).where(Usuario.username == "KingsBarberia")).first()
-        if not res:
-            admin = Usuario(username="KingsBarberia", password_hash=get_password_hash("Riverplate22"), nombre="Administrador", rol="admin")
-            session.add(admin)
-        # barberos
-        for name in ["Gustavo","Mauro","Alejandro"]:
-            exist = session.exec(select(Barbero).where(Barbero.nombre == name)).first()
-            if not exist:
-                b = Barbero(nombre=name, porcentaje=50.0)
-                session.add(b)
-        # servicios
-        services = [("Corte", 10000), ("Corte + Barba", 12000), ("Claritos", 2500), ("Global", 15000)]
-        for sname, price in services:
-            ex = session.exec(select(Servicio).where(Servicio.nombre == sname)).first()
-            if not ex:
-                session.add(Servicio(nombre=sname, precio_sugerido=price))
-        session.commit()
+# ---------------------------------
+# BARBEROS
+# ---------------------------------
+def obtener_barberos(db: Session):
+    return db.query(modelos.Barbero).all()
+
+def crear_barbero(db: Session, nombre: str, porcentaje: float, contraseña: str):
+    nuevo_barbero = modelos.Barbero(nombre=nombre, porcentaje=porcentaje, contraseña=contraseña)
+    db.add(nuevo_barbero)
+    db.commit()
+    db.refresh(nuevo_barbero)
+    return nuevo_barbero
+
+def eliminar_barbero(db: Session, barbero_id: int):
+    barbero = db.query(modelos.Barbero).filter(modelos.Barbero.id == barbero_id).first()
+    if barbero:
+        db.delete(barbero)
+        db.commit()
+    return barbero
+
+
+# ---------------------------------
+# SERVICIOS
+# ---------------------------------
+def obtener_servicios(db: Session):
+    return db.query(modelos.Servicio).all()
+
+def crear_servicio(db: Session, nombre: str, precio: float):
+    nuevo_servicio = modelos.Servicio(nombre=nombre, precio=precio)
+    db.add(nuevo_servicio)
+    db.commit()
+    db.refresh(nuevo_servicio)
+    return nuevo_servicio
+
+
+# ---------------------------------
+# CORTES
+# ---------------------------------
+def registrar_corte(db: Session, barbero_id: int, servicio_id: int, metodo_pago: str, monto: float):
+    nuevo_corte = modelos.Corte(
+        barbero_id=barbero_id,
+        servicio_id=servicio_id,
+        metodo_pago=metodo_pago,
+        monto=monto,
+        fecha=datetime.utcnow()
+    )
+    db.add(nuevo_corte)
+    db.commit()
+    db.refresh(nuevo_corte)
+    return nuevo_corte
+
+def obtener_cortes(db: Session):
+    return db.query(modelos.Corte).order_by(modelos.Corte.fecha.desc()).all()
+
+
+# ---------------------------------
+# GASTOS
+# ---------------------------------
+def registrar_gasto(db: Session, descripcion: str, monto: float):
+    nuevo_gasto = modelos.Gasto(descripcion=descripcion, monto=monto, fecha=datetime.utcnow())
+    db.add(nuevo_gasto)
+    db.commit()
+    db.refresh(nuevo_gasto)
+    return nuevo_gasto
+
+def obtener_gastos(db: Session):
+    return db.query(modelos.Gasto).order_by(modelos.Gasto.fecha.desc()).all()
