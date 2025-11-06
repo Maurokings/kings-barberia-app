@@ -90,3 +90,4 @@ def resumen_semanal(db: Session = Depends(get_db)):
         "total_semana": total,
         "resumen_por_barbero": resumen_barberos
     }
+
