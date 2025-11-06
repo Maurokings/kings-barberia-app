@@ -1,9 +1,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app import modelos, crud
+from app import modelos, crud, auth
 from app.database import engine, Base
-from app.routers import auth, barberos, servicios, cortes, gastos
+from app.routers import barberos, servicios, cortes, gastos
 
 # Crear las tablas en la base de datos si no existen
 Base.metadata.create_all(bind=engine)
