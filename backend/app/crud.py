@@ -1,5 +1,5 @@
 
-from .models import Usuario, Barbero, Servicio, Corte, Gasto
+from .modelos import Usuario, Barbero, Servicio, Corte, Gasto
 from sqlmodel import Session, select
 from passlib.context import CryptContext
 
