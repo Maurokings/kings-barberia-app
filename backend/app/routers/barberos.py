@@ -1,50 +1,48 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app import modelos
+from app.database import SessionLocal
+from app.modelos import Barbero
 
-router = APIRouter(
-    prefix="/barberos",
-    tags=["Barberos"]
-)
+router = APIRouter(prefix="/barberos", tags=["Barberos"])
 
-# Obtener todos los barberos
-@router.get("/")
-def obtener_barberos(db: Session = Depends(get_db)):
-    return db.query(modelos.Barbero).all()
+# Dependencia para obtener la base de datos
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# Crear un nuevo barbero
+# ✅ Crear nuevo barbero
 @router.post("/")
-def crear_barbero(nombre: str, porcentaje: float = 50.0, contraseña: str = "1234", db: Session = Depends(get_db)):
-    existente = db.query(modelos.Barbero).filter(modelos.Barbero.nombre == nombre).first()
+def crear_barbero(nombre: str, contraseña: str, porcentaje: float = 50.0, db: Session = Depends(get_db)):
+    existente = db.query(Barbero).filter(Barbero.nombre == nombre).first()
     if existente:
-        raise HTTPException(status_code=400, detail="El barbero ya existe.")
-    nuevo = modelos.Barbero(nombre=nombre, porcentaje=porcentaje, contraseña=contraseña)
+        raise HTTPException(status_code=400, detail=f"El barbero '{nombre}' ya existe.")
+    
+    nuevo = Barbero(nombre=nombre, contraseña=contraseña, porcentaje=porcentaje)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
-    return {"mensaje": "Barbero creado exitosamente", "barbero": nuevo}
+    return {
+        "mensaje": f"✅ Barbero '{nombre}' creado exitosamente.",
+        "id": nuevo.id,
+        "porcentaje": nuevo.porcentaje
+    }
 
-# Actualizar barbero
-@router.put("/{barbero_id}")
-def actualizar_barbero(barbero_id: int, nombre: str = None, porcentaje: float = None, db: Session = Depends(get_db)):
-    barbero = db.query(modelos.Barbero).filter(modelos.Barbero.id == barbero_id).first()
-    if not barbero:
-        raise HTTPException(status_code=404, detail="Barbero no encontrado.")
-    if nombre:
-        barbero.nombre = nombre
-    if porcentaje is not None:
-        barbero.porcentaje = porcentaje
-    db.commit()
-    db.refresh(barbero)
-    return {"mensaje": "Barbero actualizado", "barbero": barbero}
+# ✅ Obtener lista de barberos
+@router.get("/")
+def listar_barberos(db: Session = Depends(get_db)):
+    barberos = db.query(Barbero).all()
+    return barberos
 
-# Eliminar barbero
+# ✅ Eliminar un barbero (opcional)
 @router.delete("/{barbero_id}")
 def eliminar_barbero(barbero_id: int, db: Session = Depends(get_db)):
-    barbero = db.query(modelos.Barbero).filter(modelos.Barbero.id == barbero_id).first()
+    barbero = db.query(Barbero).filter(Barbero.id == barbero_id).first()
     if not barbero:
         raise HTTPException(status_code=404, detail="Barbero no encontrado.")
     db.delete(barbero)
     db.commit()
-    return {"mensaje": "Barbero eliminado correctamente"}
+    return {"mensaje": f"Barbero '{barbero.nombre}' eliminado correctamente."}
+
