@@ -1,22 +1,33 @@
 
 from fastapi import FastAPI
-from . import modelos, crud
-from .routers import auth, barberos, servicios, cortes, gastos
-from sqlmodel import SQLModel, create_engine
-import os
+from fastapi.middleware.cors import CORSMiddleware
+from app import modelos, crud
+from app.database import engine, Base
+from app.routers import auth, barberos, servicios, cortes, gastos
 
-app = FastAPI(title="KINGS Barberia API")
+# Crear las tablas en la base de datos si no existen
+Base.metadata.create_all(bind=engine)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kings.db")
-engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
+app = FastAPI(title="Kings Barbería & Peluquería API")
 
-@app.on_event("startup")
-def on_startup():
-    SQLModel.metadata.create_all(engine)
-    crud.create_default_data(engine)
+# Configurar CORS para permitir peticiones desde el frontend
+origins = ["*"]  # Luego podés poner tu dominio exacto
 
-app.include_router(auth.router, prefix="/auth")
-app.include_router(barberos.router, prefix="/barberos")
-app.include_router(servicios.router, prefix="/servicios")
-app.include_router(cortes.router, prefix="/cortes")
-app.include_router(gastos.router, prefix="/gastos")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Incluir los routers
+app.include_router(auth.router)
+app.include_router(barberos.router)
+app.include_router(servicios.router)
+app.include_router(cortes.router)
+app.include_router(gastos.router)
+
+@app.get("/")
+def root():
+    return {"mensaje": "API de Kings Barbería funcionando correctamente 😎"}
