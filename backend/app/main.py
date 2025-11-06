@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from app.database import Base, engine
 from app.modelos import *
-from app.routers import auth, barberos, servicios, cortes, gastos
+from app import auth
+from app.routers import barberos, servicios, cortes, gastos
+
 
 # Crear la instancia principal de FastAPI
 app = FastAPI(title="KINGS Barbería & Peluquería API")
