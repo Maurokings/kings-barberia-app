@@ -1,79 +1,66 @@
 
 from sqlalchemy.orm import Session
 from app import modelos
-from datetime import datetime
 
-# ---------------------------------
-# USUARIOS
-# ---------------------------------
-def obtener_usuario_por_nombre(db: Session, nombre_usuario: str):
+# ------------------ USUARIOS ------------------
+
+def get_usuario(db: Session, nombre_usuario: str):
     return db.query(modelos.Usuario).filter(modelos.Usuario.nombre_usuario == nombre_usuario).first()
 
 
-# ---------------------------------
-# BARBEROS
-# ---------------------------------
-def obtener_barberos(db: Session):
+# ------------------ BARBEROS ------------------
+
+def get_barberos(db: Session):
     return db.query(modelos.Barbero).all()
 
-def crear_barbero(db: Session, nombre: str, porcentaje: float, contraseña: str):
-    nuevo_barbero = modelos.Barbero(nombre=nombre, porcentaje=porcentaje, contraseña=contraseña)
-    db.add(nuevo_barbero)
+def create_barbero(db: Session, nombre: str):
+    nuevo = modelos.Barbero(nombre=nombre)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_barbero)
-    return nuevo_barbero
-
-def eliminar_barbero(db: Session, barbero_id: int):
-    barbero = db.query(modelos.Barbero).filter(modelos.Barbero.id == barbero_id).first()
-    if barbero:
-        db.delete(barbero)
-        db.commit()
-    return barbero
+    db.refresh(nuevo)
+    return nuevo
 
 
-# ---------------------------------
-# SERVICIOS
-# ---------------------------------
-def obtener_servicios(db: Session):
+# ------------------ SERVICIOS ------------------
+
+def get_servicios(db: Session):
     return db.query(modelos.Servicio).all()
 
-def crear_servicio(db: Session, nombre: str, precio: float):
-    nuevo_servicio = modelos.Servicio(nombre=nombre, precio=precio)
-    db.add(nuevo_servicio)
+def create_servicio(db: Session, nombre: str, precio: float):
+    nuevo = modelos.Servicio(nombre=nombre, precio=precio)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_servicio)
-    return nuevo_servicio
+    db.refresh(nuevo)
+    return nuevo
 
 
-# ---------------------------------
-# CORTES
-# ---------------------------------
-def registrar_corte(db: Session, barbero_id: int, servicio_id: int, metodo_pago: str, monto: float):
-    nuevo_corte = modelos.Corte(
+# ------------------ CORTES ------------------
+
+def get_cortes(db: Session):
+    return db.query(modelos.Corte).all()
+
+def create_corte(db: Session, barbero_id: int, servicio_id: int, cliente: str, precio: float, fecha: str):
+    nuevo = modelos.Corte(
         barbero_id=barbero_id,
         servicio_id=servicio_id,
-        metodo_pago=metodo_pago,
-        monto=monto,
-        fecha=datetime.utcnow()
+        cliente=cliente,
+        precio=precio,
+        fecha=fecha
     )
-    db.add(nuevo_corte)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_corte)
-    return nuevo_corte
-
-def obtener_cortes(db: Session):
-    return db.query(modelos.Corte).order_by(modelos.Corte.fecha.desc()).all()
+    db.refresh(nuevo)
+    return nuevo
 
 
-# ---------------------------------
-# GASTOS
-# ---------------------------------
-def registrar_gasto(db: Session, descripcion: str, monto: float):
-    nuevo_gasto = modelos.Gasto(descripcion=descripcion, monto=monto, fecha=datetime.utcnow())
-    db.add(nuevo_gasto)
+# ------------------ GASTOS ------------------
+
+def get_gastos(db: Session):
+    return db.query(modelos.Gasto).all()
+
+def create_gasto(db: Session, descripcion: str, monto: float, fecha: str):
+    nuevo = modelos.Gasto(descripcion=descripcion, monto=monto, fecha=fecha)
+    db.add(nuevo)
     db.commit()
-    db.refresh(nuevo_gasto)
-    return nuevo_gasto
-
-def obtener_gastos(db: Session):
-    return db.query(modelos.Gasto).order_by(modelos.Gasto.fecha.desc()).all()
+    db.refresh(nuevo)
+    return nuevo
